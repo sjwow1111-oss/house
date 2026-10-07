@@ -10,7 +10,8 @@
     "test:smoke": "node smoke.mjs",
     "deploy": "npm run build && wrangler deploy",
     "deploy:check": "npm run build && wrangler deploy --dry-run",
-    "dev:worker": "wrangler dev --local"
+    "dev:worker": "wrangler dev --local",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-kr": "^5.3.0",

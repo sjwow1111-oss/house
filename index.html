@@ -1,15 +1,62 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#192720"/><link rel="icon" type="image/svg+xml" href="/favicon.svg"/><title>산들 — Three.js 건축 맵</title></head>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#192720"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <title>산들 — 집 안을 걷는 풍경</title>
+</head>
 <body>
-<canvas id="scene" aria-label="산과 정원으로 둘러싸인 현대 주택 3D 맵"></canvas>
-<div class="vignette"></div>
-<header><a class="brand" href="/">산들<span>SANDEUL · ARCHITECTURAL WORLD</span></a><div class="status"><i></i> LIVE ENVIRONMENT</div></header>
-<main class="intro"><div class="eyebrow">01 / THE COUNTRYSIDE RESIDENCE</div><h1>풍경 안에,<br/>머무는 집.</h1><p>산의 능선과 따뜻한 빛 사이.<br/>자연 속 작은 주거 공간을 탐험하세요.</p><div class="tags"><span>37° N, 127° E</span><span>가을 · 맑음</span></div></main>
-<aside class="panel"><div class="panel-title">SCENE SETTINGS <span>환경 설정</span></div><label class="label">빛의 시간 <span id="time-label">늦은 오후</span></label><div class="segmented"><button data-time="day">낮</button><button data-time="golden" class="active">오후</button><button data-time="night">밤</button></div><label class="slider-label" for="exposure">노출 <output id="exposure-value">1.0</output></label><input id="exposure" type="range" min="0.5" max="1.6" value="1" step="0.05"/><div class="divider"></div><label class="toggle-row">실내 조명 <input id="lights" type="checkbox" checked/><span class="switch"></span></label><label class="toggle-row">잔디의 움직임 <input id="wind" type="checkbox" checked/><span class="switch"></span></label><button id="reset" class="reset">↺ <span>처음 시점으로</span></button></aside>
-<footer><div class="view-buttons"><button id="orbit" class="active">둘러보기 <span>01</span></button><button id="walk">걸어보기 <span>02</span></button></div><div id="hint">드래그하여 회전 <b>·</b> 스크롤하여 확대</div><div class="render-badge">WEBGL / PBR <span id="fps">— FPS</span></div></footer>
-<div id="walk-help" hidden><strong>정원을 걸어보세요</strong><p>W A S D 이동 · 마우스 시선 · Shift 빠르게 · Esc 종료</p><button id="enter-walk">탐험 시작 ↗</button></div>
-<div id="loading"><span>산들</span><p>풍경을 불러오고 있습니다</p></div>
-<div id="error" hidden></div>
-<script type="module" src="/src/main.js"></script>
-</body></html>
+  <canvas id="scene" tabindex="0" aria-label="주택 내부와 정원을 탐방하는 3D 맵"></canvas>
+  <div class="vignette"></div>
+  <header>
+    <a class="brand" href="/">산들<span>SANDEUL · ARCHITECTURAL WORLD</span></a>
+    <div class="status"><i></i> LIVE ENVIRONMENT</div>
+  </header>
+  <main class="intro">
+    <div class="eyebrow">01 / THE COUNTRYSIDE RESIDENCE</div>
+    <h1>풍경 안에,<br/>머무는 집.</h1>
+    <p>정원에서 거실로, 계단을 따라 침실로.<br/>빛과 일상의 작은 디테일을 만나보세요.</p>
+    <button id="visit-inside" class="visit">집 안으로 들어가기 <span>↗</span></button>
+    <div class="tags"><span>2 FLOORS · 7 SPACES</span><span>가을 · 맑음</span></div>
+  </main>
+  <button id="settings-toggle" aria-controls="settings" aria-expanded="false" aria-label="환경 설정 열기" class="panel-toggle">☷ <span>환경</span></button>
+  <aside id="settings" class="panel">
+    <div class="panel-title">SCENE SETTINGS <span>환경 설정</span></div>
+    <label class="label">빛의 시간 <span id="time-label">늦은 오후</span></label>
+    <div class="segmented"><button data-time="day">낮</button><button data-time="golden" class="active">오후</button><button data-time="night">밤</button></div>
+    <label class="slider-label" for="exposure">노출 <output id="exposure-value">1.0</output></label>
+    <input id="exposure" type="range" min="0.5" max="1.6" value="1" step="0.05"/>
+    <div class="divider"></div>
+    <label class="toggle-row">실내 조명 <input id="lights" type="checkbox" checked/><span class="switch"></span></label>
+    <label class="toggle-row">잔디의 움직임 <input id="wind" type="checkbox" checked/><span class="switch"></span></label>
+    <button id="reset" class="reset">↺ <span>처음 시점으로</span></button>
+  </aside>
+  <footer>
+    <div class="view-buttons"><button id="orbit" class="active">둘러보기 <span>01</span></button><button id="walk">직접 탐방 <span>02</span></button></div>
+    <div id="hint">드래그하여 회전 <b>·</b> 스크롤하여 확대</div>
+    <div class="render-badge">WEBGL / PBR <span id="fps">— FPS</span></div>
+  </footer>
+  <div id="walk-help" role="dialog" aria-modal="true" aria-labelledby="walk-title" hidden>
+    <button id="close-help" aria-label="탐방 안내 닫기">×</button>
+    <div class="eyebrow">A HOME TO EXPLORE</div>
+    <strong id="walk-title">집 안까지, 천천히 걸어보세요.</strong>
+    <p>왼쪽 조이스틱으로 이동하고 화면을 드래그해 둘러보세요.<br/>키보드에서는 WASD로 이동할 수 있습니다.<br/>문은 가까이 다가가면 자동으로 열립니다.</p>
+    <button id="enter-walk">정원에서 시작 ↗</button>
+  </div>
+  <div id="walk-hud" hidden>
+    <div class="place"><span id="floor-name">OUTDOOR</span><strong id="room-name" aria-live="polite">정원</strong></div>
+    <label class="destination-label"><span>공간 바로가기</span><select id="destination" aria-label="탐방할 공간 선택"></select></label>
+    <button id="exit-walk">둘러보기로 <span>↗</span></button>
+  </div>
+  <div id="walk-controls" hidden>
+    <div class="movement-control"><div id="joystick" role="group" aria-label="이동 조이스틱. 위로 밀면 전진, 아래로 밀면 후진, 좌우로 밀면 옆으로 이동합니다."><span class="stick-arrow north">⌃</span><span class="stick-arrow south">⌄</span><span class="stick-arrow west">‹</span><span class="stick-arrow east">›</span><div id="joystick-knob"></div></div><span class="control-label">이동</span></div>
+    <div class="look-hint"><span>↔</span> 화면 드래그로 둘러보기</div>
+    <div class="crosshair"></div>
+  </div>
+  <div id="loading"><span>산들</span><p>풍경을 불러오고 있습니다</p></div>
+  <div id="error" hidden></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
