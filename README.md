@@ -48,3 +48,26 @@ npm run test:smoke
 시스템 Chromium(`/usr/bin/chromium`) 또는 `CHROMIUM_PATH`가 필요합니다.
 렌더링, 시간대 전환, 노출, 조명·바람 제어, 걷기 이동 및 모바일 뷰를 확인합니다.
 스크린샷은 저장소 외부 `/workspace/artifacts`에 저장됩니다.
+
+## Cloudflare Workers 배포
+
+`wrangler.jsonc`는 `house` Worker에서 `dist` 정적 파일을 제공하도록 설정되어 있습니다.
+브라우저가 Three.js를 실행하므로 서버 측 WebGL이나 별도 Worker 코드는 필요하지 않습니다.
+
+```sh
+npm run deploy:check  # 빌드 및 업로드 없는 배포 패키지 검증
+npm run deploy       # 빌드 후 실제 Workers 배포
+```
+
+실제 배포에는 Cloudflare 인증이 필요합니다. 로컬 PC에서는 `npx wrangler login`을 사용합니다.
+자동화 환경에서는 환경 설정에 `CLOUDFLARE_API_TOKEN`을 비밀 값으로 저장하고
+`CLOUDFLARE_ACCOUNT_ID`에 배포할 계정 ID를 설정합니다. API 토큰에는 해당 계정의
+Workers Scripts Edit 권한이 필요합니다. 토큰을 코드나 Git에 넣지 마세요.
+이 클라우드 환경에서는 `XDG_CONFIG_HOME=/workspace/.config`를 사용하고
+`WRANGLER_LOG_PATH=/workspace/house/.wrangler/logs`로 로그를
+쓰기 가능한 위치에 저장하고 `WRANGLER_SEND_METRICS=false`를 사용할 수 있습니다.
+
+GitHub 연동으로 자동 배포하려면 Cloudflare Workers & Pages에서 저장소
+`sjwow1111-oss/house`, 브랜치 `main`을 연결하고 빌드 명령은 `npm run build`,
+배포 명령은 `npx wrangler deploy`로 설정합니다. 최초 배포 성공 후 출력되는
+Workers URL에서 WebGL 화면과 정적 자산을 확인하세요.
