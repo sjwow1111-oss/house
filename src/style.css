@@ -77,3 +77,10 @@ body.walking footer, body.walking .status { display: none; }
 }
 /* Hidden introductory actions must not capture taps during exploration. */
 body.walking .intro { visibility: hidden; }
+.action-controls { position: absolute; right: 35px; bottom: 125px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
+.action-controls button { min-width: 76px; min-height: 48px; background: #263b2dd9; border: 1px solid #ffffff55; border-radius: 26px; font-size: 12px; touch-action: manipulation; }
+.action-controls button[aria-pressed=true] { background: #dde3ce; color: #233627; }
+.panel { max-height: calc(100dvh - 210px); overflow-y: auto; }
+@media(max-width:800px) { .action-controls { right: 22px; bottom: max(130px, env(safe-area-inset-bottom)); } .panel { max-height: calc(100dvh - 180px); } }
+@media(max-height:550px) { .action-controls { right: 26px; bottom: 72px; flex-direction: row; gap: 10px; } .action-controls button { min-height: 44px; min-width: 72px; } .panel { max-height: calc(100dvh - 95px); } }
+@media(max-height:550px) { .look-hint { bottom: 18px; right: 26px; } .look-hint span { display: none; } }

@@ -6,6 +6,7 @@ import '@fontsource/noto-sans-kr/korean-400.css';
 import '@fontsource/noto-sans-kr/korean-500.css';
 import '@fontsource/noto-serif-kr/korean-400.css';
 import { createHouse } from './world/house.js';
+import { createPlayerShadow } from './player-shadow.js';
 import { createNavigation } from './navigation.js';
 import './style.css';
 
@@ -30,7 +31,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1;
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2('#b7c9c1', 0.008);
-const camera = new THREE.PerspectiveCamera(mobile ? 58 : 43, innerWidth / innerHeight, 0.06, 450);
+const camera = new THREE.PerspectiveCamera(mobile ? 58 : 43, innerWidth / innerHeight, 0.12, 300);
 const initialCamera = new THREE.Vector3(19, 9.5, 36);
 const initialTarget = new THREE.Vector3(0, 3.3, 0);
 camera.position.copy(initialCamera);
@@ -141,8 +142,8 @@ for(const x of [-11,10.2]) {
 }
 const sun = new THREE.DirectionalLight('#ffe5bf',3.4); sun.position.set(-20,26,14);
 sun.castShadow=true; sun.shadow.mapSize.set(mobile ? 1024 : 2048,mobile ? 1024 : 2048);
-Object.assign(sun.shadow.camera,{left:-32,right:32,top:30,bottom:-30,near:1,far:110});
-sun.shadow.bias=-.00025; sun.shadow.normalBias=.035; scene.add(sun);
+Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:110});
+sun.shadow.bias=-.00025; sun.shadow.normalBias=.012; scene.add(sun);
 const hemi = new THREE.HemisphereLight('#d4e5ef','#465230',2.1); scene.add(hemi);
 const sky = new Sky(); sky.scale.setScalar(400); scene.add(sky);
 const skyUniforms = sky.material.uniforms;
@@ -202,7 +203,7 @@ for(let layer=0;layer<3;layer++) {
   mountain.position.set(0,0,-55-layer*25);scene.add(mountain);
 }
 // Instanced grass keeps thousands of blades to a single draw call.
-const grassCount=mobile ? 26000 : 55000;
+const grassCount=mobile ? 42000 : 90000;
 const bladeGeo=new THREE.BufferGeometry();
 bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute([-.018,0,0,.018,0,0,.008,.18,0,-.008,.18,0,.016,.31,0],3));
 bladeGeo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,.6,0,.6,.5,1],2));
@@ -234,7 +235,7 @@ for(const x of [13.7,16.3]) {box(.65,.09,.65,x,.5,-1,materials.wood);box(.65,.75
 // Share draw calls across the fixed architecture and vegetation.
 const batches=new Map();
 for(const mesh of [...scene.children]) {
-  if(!mesh.isMesh || mesh.isInstancedMesh || mesh===sky || mesh.userData.dynamic || Array.isArray(mesh.material))continue;
+  if(!mesh.isMesh || mesh.isInstancedMesh || mesh===sky || mesh.userData.dynamic || mesh.material.transparent || Array.isArray(mesh.material))continue;
   const key=mesh.material.uuid+':'+mesh.castShadow+':'+mesh.receiveShadow+':'+(mesh.userData.batchZone||'landscape');
   if(!batches.has(key))batches.set(key,{material:mesh.material,cast:mesh.castShadow,receive:mesh.receiveShadow,items:[]});
   mesh.updateMatrixWorld();const original=mesh.geometry.clone();const g=original.index?original.toNonIndexed():original;if(g!==original)original.dispose();g.applyMatrix4(mesh.matrixWorld);
@@ -276,6 +277,7 @@ document.querySelector('#exposure').addEventListener('input',e=>{renderer.toneMa
 document.querySelector('#lights').addEventListener('change',e=>{lightsEnabled=e.target.checked;updateLights();});
 document.querySelector('#wind').addEventListener('change',e=>{windEnabled=e.target.checked;});
 
+const playerShadow=createPlayerShadow(scene);
 const navigation=createNavigation({camera,controls,canvas,colliders:house.colliders,initialCamera,initialTarget});
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 const clock=new THREE.Clock();let frames=0,lastFps=performance.now();
@@ -284,6 +286,7 @@ function animate(){
   const dt=Math.min(clock.getDelta(),.12);
   if(windEnabled&&!reducedMotion.matches)windUniform.value+=dt*1.7;
   if(navigation.mode==='walk')navigation.update(dt);else controls.update();
+  playerShadow.update(dt,camera.position,navigation,navigation.mode==='walk');
   house.update(dt,camera.position,navigation.mode==='walk',navigation.foot);
   renderer.render(scene,camera);frames++;
   const now=performance.now();if(now-lastFps>1000){document.querySelector('#fps').textContent=`${Math.round(frames*1000/(now-lastFps))} FPS`;frames=0;lastFps=now;}
@@ -291,4 +294,4 @@ function animate(){
 renderer.setAnimationLoop(animate);
 document.querySelector('#loading').hidden=true;
 // Read-only diagnostics for smoke tests and future development.
-window.mapDiagnostics=()=>({...navigation.diagnostics(),time,lightsEnabled,windEnabled,lampEmission:house.materials.light.emissiveIntensity,exposure:renderer.toneMappingExposure,grassInstances:grass.count,furnishings:{...house.counts},colliderCount:house.colliders.length,doors:house.doors.map(d=>({type:d.type,amount:d.amount})),meshCount:scene.children.filter(x=>x.isMesh).length,camera:camera.position.toArray(),renderer:{...renderer.info.render}});
+window.mapDiagnostics=()=>({...navigation.diagnostics(),playerShadow:playerShadow.diagnostics(),lighting:house.roomLights.map(({light})=>({position:light.position.toArray(),intensity:light.intensity,shadow:light.castShadow})),time,lightsEnabled,windEnabled,lampEmission:house.materials.light.emissiveIntensity,exposure:renderer.toneMappingExposure,grassInstances:grass.count,furnishings:{...house.counts},colliderCount:house.colliders.length,doors:house.doors.map(d=>({type:d.type,amount:d.amount})),meshCount:scene.children.filter(x=>x.isMesh).length,camera:camera.position.toArray(),renderer:{...renderer.info.render}});

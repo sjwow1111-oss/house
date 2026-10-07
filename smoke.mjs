@@ -10,15 +10,25 @@ async function diagnostic(page){return page.evaluate(()=>window.mapDiagnostics()
 async function frames(page,n=3){const start=(await diagnostic(page)).renderer.frame;await page.waitForFunction(v=>window.mapDiagnostics().renderer.frame>=v,start+n);}
 try {
   const page=await browser.newPage({viewport:{width:960,height:640}});observe(page);await ready(page);
-  const initial=await diagnostic(page);assert.ok(initial.furnishings['킹 침대·침구']);assert.ok(initial.furnishings['싱크대·수전']);assert.ok(initial.colliderCount>100);
+  const initial=await diagnostic(page);assert.equal(initial.grassInstances,90000);const lightPositions=initial.lighting.map(l=>l.position);assert.ok(initial.furnishings['킹 침대·침구']);assert.ok(initial.furnishings['싱크대·수전']);assert.ok(initial.colliderCount>100);
   await page.screenshot({path:'/workspace/artifacts/house-exterior.png'});
   await page.locator('#walk').click();await page.locator('#enter-walk').click();
   assert.equal((await diagnostic(page)).mode,'walk');assert.equal((await diagnostic(page)).pointerLocked,false);
-  await page.keyboard.down('KeyW');await page.waitForFunction(()=>window.mapDiagnostics().camera[2]<10.8);await page.keyboard.up('KeyW');
+  await page.waitForFunction(()=>window.mapDiagnostics().playerShadow.visible);assert.equal((await diagnostic(page)).playerShadow.visible,true);
+  await page.keyboard.press('Space');await page.waitForFunction(()=>window.mapDiagnostics().jumpHeight>.25);
+  await page.waitForFunction(()=>window.mapDiagnostics().grounded);
+  await page.mouse.move(680,350);await page.mouse.down();await page.mouse.move(680,630);await page.mouse.up();await frames(page);await page.screenshot({path:'/workspace/artifacts/house-player-shadow.png'});await page.locator('#destination').selectOption('garden');
+  await page.locator('#settings-toggle').click();await page.locator('#run-speed').fill('8');
+  assert.equal((await diagnostic(page)).runSpeed,8);await page.locator('#settings-toggle').click();
+  await page.locator('#sprint-toggle').click();assert.equal((await diagnostic(page)).sprint,true);
+  await page.keyboard.down('KeyW');await page.waitForFunction(()=>window.mapDiagnostics().camera[2]<10.5);await page.keyboard.up('KeyW');
+  await page.locator('#sprint-toggle').click();assert.equal((await diagnostic(page)).sprint,false);
+  console.log('PASS jump, adjustable sprint and player shadow caster');
+  await page.keyboard.down('KeyW');await page.waitForFunction(()=>window.mapDiagnostics().camera[2]<10.1);await page.keyboard.up('KeyW');
   await page.keyboard.press('Escape');assert.equal((await diagnostic(page)).mode,'orbit');
   await page.locator('#visit-inside').click();await frames(page,4);
-  assert.equal((await diagnostic(page)).room,'거실');assert.ok((await diagnostic(page)).doors.find(d=>d.type==='slide').amount>.8);
-  await page.mouse.move(700,360);await page.mouse.down();await page.mouse.move(730,380);await page.mouse.up();assert.ok(Math.abs((await diagnostic(page)).yaw-.25)>.05);
+  assert.deepEqual((await diagnostic(page)).lighting.map(l=>l.position),lightPositions);assert.equal((await diagnostic(page)).room,'거실');assert.ok((await diagnostic(page)).doors.find(d=>d.type==='slide').amount>.8);
+  await page.mouse.move(700,360);await page.mouse.down();await page.mouse.move(730,380);await page.mouse.up();await page.waitForFunction(()=>Math.abs(window.mapDiagnostics().yaw-.25)>.05);
   await page.locator('#destination').selectOption('living');
   await page.screenshot({path:'/workspace/artifacts/house-living.png'});console.log('PASS desktop movement, unlocked look and entry');
   await page.locator('#settings-toggle').click();await page.locator('[data-time="night"]').click();await frames(page);
@@ -40,7 +50,10 @@ try {
   await mobile.addInitScript(()=>{HTMLCanvasElement.prototype.requestPointerLock=()=>{throw Error('Exploration must never request pointer lock');};});
   await ready(mobile);assert.equal(await mobile.locator('#settings').isVisible(),false);
   await mobile.locator('#walk').tap();await mobile.locator('#enter-walk').tap();
-  const initialMobile=await diagnostic(mobile);assert.equal(initialMobile.mode,'walk');assert.equal(initialMobile.pointerLocked,false);assert.equal(initialMobile.grassInstances,26000);
+  await mobile.locator('#jump').tap();await mobile.waitForFunction(()=>window.mapDiagnostics().jumpHeight>.25);await mobile.waitForFunction(()=>window.mapDiagnostics().grounded);
+  await mobile.locator('#settings-toggle').tap();await mobile.locator('#run-speed').fill('7.5');assert.equal((await diagnostic(mobile)).runSpeed,7.5);await mobile.locator('#settings-toggle').tap();
+  await mobile.locator('#sprint-toggle').tap();assert.equal((await diagnostic(mobile)).sprint,true);await mobile.locator('#sprint-toggle').tap();
+  const initialMobile=await diagnostic(mobile);assert.equal(initialMobile.mode,'walk');assert.equal(initialMobile.pointerLocked,false);assert.equal(initialMobile.grassInstances,42000);
   const cdp=await context.newCDPSession(mobile);const bounds=await mobile.locator('#joystick').boundingBox();
   const stick={x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2,id:1};
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[stick]});

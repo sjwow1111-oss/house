@@ -31,6 +31,9 @@
     <div class="divider"></div>
     <label class="toggle-row">실내 조명 <input id="lights" type="checkbox" checked/><span class="switch"></span></label>
     <label class="toggle-row">잔디의 움직임 <input id="wind" type="checkbox" checked/><span class="switch"></span></label>
+    <div class="divider"></div>
+    <label class="slider-label" for="run-speed">달리기 속도 <output id="run-speed-value">5.5 m/s</output></label>
+    <input id="run-speed" type="range" min="3" max="10" step="0.5" value="5.5"/>
     <button id="reset" class="reset">↺ <span>처음 시점으로</span></button>
   </aside>
   <footer>
@@ -42,7 +45,7 @@
     <button id="close-help" aria-label="탐방 안내 닫기">×</button>
     <div class="eyebrow">A HOME TO EXPLORE</div>
     <strong id="walk-title">집 안까지, 천천히 걸어보세요.</strong>
-    <p>왼쪽 조이스틱으로 이동하고 화면을 드래그해 둘러보세요.<br/>키보드에서는 WASD로 이동할 수 있습니다.<br/>문은 가까이 다가가면 자동으로 열립니다.</p>
+    <p>왼쪽 조이스틱으로 이동하고 화면을 드래그해 둘러보세요.<br/>WASD 이동 · Space 점프 · Shift 달리기<br/>문은 가까이 다가가면 자동으로 열립니다.</p>
     <button id="enter-walk">정원에서 시작 ↗</button>
   </div>
   <div id="walk-hud" hidden>
@@ -52,6 +55,7 @@
   </div>
   <div id="walk-controls" hidden>
     <div class="movement-control"><div id="joystick" role="group" aria-label="이동 조이스틱. 위로 밀면 전진, 아래로 밀면 후진, 좌우로 밀면 옆으로 이동합니다."><span class="stick-arrow north">⌃</span><span class="stick-arrow south">⌄</span><span class="stick-arrow west">‹</span><span class="stick-arrow east">›</span><div id="joystick-knob"></div></div><span class="control-label">이동</span></div>
+    <div class="action-controls"><button id="sprint-toggle" aria-pressed="false">달리기 ⇧</button><button id="jump">점프 ↑</button></div>
     <div class="look-hint"><span>↔</span> 화면 드래그로 둘러보기</div>
     <div class="crosshair"></div>
   </div>
