@@ -37,13 +37,13 @@ try {
   await page.locator('#wind').uncheck();assert.equal((await diagnostic(page)).windEnabled,false);
   await page.locator('#exposure').fill('1.1');assert.equal((await diagnostic(page)).exposure,1.1);
   await page.locator('#settings-toggle').click();await page.screenshot({path:'/workspace/artifacts/house-living-night.png'});console.log('PASS lighting, exposure and wind');
-  for(const [key,room] of [['kitchen','주방'],['dining','다이닝'],['bathroom','욕실'],['bedroom','침실'],['office','서재'],['guest','게스트룸']]){
+  for(const [key,room] of [['kitchen','주방'],['dining','다이닝'],['bathroom','욕실'],['lounge','창가 라운지'],['bedroom','침실'],['office','서재'],['guest','게스트룸']]){
     await page.locator('#destination').selectOption(key);assert.equal((await diagnostic(page)).room,room);
     if(key==='bedroom'||key==='office')assert.ok((await diagnostic(page)).foot>4);
   }
   await page.locator('#destination').selectOption('bedroom');await page.screenshot({path:'/workspace/artifacts/house-bedroom.png'});
   await page.locator('#exit-walk').click();assert.equal((await diagnostic(page)).mode,'orbit');await page.close();
-  console.log('PASS desktop: model, keyboard movement, unlocked drag, automatic door, seven spaces, lighting and exit');
+  console.log('PASS desktop: model, keyboard movement, unlocked drag, automatic door, eight spaces, lighting and exit');
 
   const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   const mobile=await context.newPage();observe(mobile);

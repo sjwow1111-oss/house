@@ -158,8 +158,8 @@ function wallLight(x,y,z) {
   light.position.set(x,y-.12,z+.15); light.target.position.set(x,.65,z+.7);
   scene.add(light,light.target); interiorLights.push(light);
 }
-for(const x of [-8,-.1,6.5]) wallLight(x,3.08,3.65);
-wallLight(-10.8,3.25,3.1); wallLight(8.9,6.5,1.7);
+for(const [x,z] of [[-8,3.19],[-.30,3.19],[6.38,3.69]])wallLight(x,3.08,z);
+wallLight(-9.5,3.25,3.19);wallLight(8.9,6.5,1.7);
 for(const x of [1.5,4.8]) {
   const light=new THREE.PointLight('#ffd6a0',6,6,2);light.position.set(x,2.6,4);scene.add(light);interiorLights.push(light);
 }
@@ -230,7 +230,7 @@ grass.receiveShadow=true;scene.add(grass);
 box(2.5,.12,.7,14.5,.65,2,materials.wood);
 for(const x of [13.5,15.5]) box(.08,.6,.5,x,.32,2,materials.metal);
 cylinder(.65,.65,.08,15,.87,-1,materials.wood,24);cylinder(.04,.04,.85,15,.43,-1,materials.metal);
-for(const x of [13.7,16.3]) {box(.65,.09,.65,x,.5,-1,materials.wood);box(.65,.75,.07,x,.82,-1.3,materials.wood);for(const dx of [-.25,.25]) for(const dz of [-.25,.25]) box(.035,.5,.035,x+dx,.25,-1+dz,materials.metal);}
+for(const x of [13.7,16.3]){box(.65,.09,.65,x,.5,-1,materials.wood);box(.07,.75,.65,x+(x<15?-.3:.3),.82,-1,materials.wood);for(const dx of [-.25,.25])for(const dz of [-.25,.25])box(.035,.5,.035,x+dx,.25,-1+dz,materials.metal);}
 
 // Share draw calls across the fixed architecture and vegetation.
 const batches=new Map();
@@ -282,12 +282,18 @@ const navigation=createNavigation({camera,controls,canvas,colliders:house.collid
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 const clock=new THREE.Clock();let frames=0,lastFps=performance.now();
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+// Development-only camera positions for a repeatable room-by-room visual audit.
+let inspection=null;
+if(import.meta.env.DEV)window.mapInspection={
+  view(position,target,{floor=.68,walking=false}={}){navigation.stop();inspection={floor,walking};camera.position.set(...position);camera.lookAt(...target);camera.fov=68;camera.updateProjectionMatrix();},
+  end(){inspection=null;navigation.stop();},
+};
 function animate(){
   const dt=Math.min(clock.getDelta(),.12);
   if(windEnabled&&!reducedMotion.matches)windUniform.value+=dt*1.7;
-  if(navigation.mode==='walk')navigation.update(dt);else controls.update();
+  if(!inspection){if(navigation.mode==='walk')navigation.update(dt);else controls.update();}
   playerShadow.update(dt,camera.position,navigation,navigation.mode==='walk');
-  house.update(dt,camera.position,navigation.mode==='walk',navigation.foot);
+  house.update(dt,camera.position,inspection?inspection.walking:navigation.mode==='walk',inspection?inspection.floor:navigation.foot);
   renderer.render(scene,camera);frames++;
   const now=performance.now();if(now-lastFps>1000){document.querySelector('#fps').textContent=`${Math.round(frames*1000/(now-lastFps))} FPS`;frames=0;lastFps=now;}
 }

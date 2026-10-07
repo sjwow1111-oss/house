@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:smoke": "node smoke.mjs",
+    "test:visual": "node audit.mjs",
     "deploy": "npm run build && wrangler deploy",
     "deploy:check": "npm run build && wrangler deploy --dry-run",
     "dev:worker": "wrangler dev --local",
